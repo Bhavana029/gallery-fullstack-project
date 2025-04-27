@@ -1,0 +1,168 @@
+/* Home.css */
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #2e2c2c;
+  min-height: 100vh;
+}
+
+/* Ensure navbar is properly placed */
+.navbar {
+  width: 100%;
+  background-color: #000; /* Keep it black */
+  padding-bottom:  30px;
+  color: white;
+ 
+}
+
+/* Add space below navbar */
+.content-container {
+  width: 90%;
+  margin-top: 60px; /* Space after navbar */
+  padding-bottom: 180px;
+}
+
+/* Grid layout for the photo gallery */
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  width: 100%;
+  padding-top: 50px;
+  padding-bottom: 20px;
+
+}
+
+/* Styling for individual photo cards */
+.photo-card {
+  background: #010101;
+  border-radius: 12px;
+  box-shadow:  0px 4px 8px rgba(173, 168, 168, 0.9);
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  text-align: center;
+   padding-bottom: 10px;
+  position: relative;
+  border: 1px solid #dfd7d7;
+  width: 100%;
+ 
+
+}
+
+.photo-card:hover {
+  transform: translateY(-5px);
+}
+
+.photo-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  padding: 20px;
+}
+
+.photo-card h3 {
+  font-size: 20px;
+ 
+  color: #f1f1f1;
+  margin: 5px 0;
+
+}
+
+.photo-card p {
+  font-size: 0.9rem;
+  padding: 0 10px;
+  color: #f1eeee;
+  margin: 5px 0;
+}
+
+.photo-card small {
+  display: block;
+  margin: 5px 0;
+  font-size: 16px;
+  color: #f8f1f1;
+}
+P{
+
+}
+.save-button {
+  background-color: #afb7cfec;
+  color: rgb(0, 0, 0);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s;
+  width: 120px;
+  margin: 20px 0;
+}
+
+.save-button:hover {
+  background-color: #1d1e1f;
+  width: 100px;
+}
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+}
+
+.modal-image {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 25px;
+  color: white;
+  cursor: pointer;
+}
+.c{
+  padding-top: 50px;
+  color: #f1eeee;
+}
+.photo-gallery P{
+  color: #f1eeee;
+  text-align: center;
+
+}
+.photo-actions{
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding-bottom: 20px;
+}
+.photo-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.icon {
+  cursor: pointer;
+  font-size: 20px;
+  color: white;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.icon:hover {
+  color: #747575;
+  transform: scale(1.1);
+}

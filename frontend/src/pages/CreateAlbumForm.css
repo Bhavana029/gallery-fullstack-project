@@ -1,0 +1,50 @@
+.album-form {
+  margin-top: 30px;
+  width: 400px;
+  background: rgb(82, 78, 78);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(77, 77, 77, 0.552);
+  text-align: center;
+}
+
+.album-form input, 
+.album-form textarea {
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+  border: 1px solid #c1b6b6;
+  border-radius: 4px;
+  background: #131313;
+  color: floralwhite;
+}
+
+.album-form button{
+  background:  rgb(131, 120, 143);
+  color: rgb(13, 13, 13);
+  padding: 10px;
+  border: none;
+  width: 100%;
+  font-size: large;
+  cursor: pointer;
+  border-radius: 30px;
+  
+}
+
+.album-form .close-btn {
+  background: rgb(131, 120, 143);
+  margin-top: 10px;
+  border-radius: 30px;
+  font-size: large;
+  
+}
+.album-form h2{
+  color: aliceblue;
+}
+.album-form .file{
+  
+  color: azure;
+}
+label{
+  color: azure;
+}

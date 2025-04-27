@@ -1,0 +1,33 @@
+
+.auth-container {
+    
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #212529;
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+  }
+  
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .form-control {
+    background-color: #343a40;
+    color: white;
+    border: 1px solid #495057;
+  }
+  
+  .form-control:focus {
+    background-color: #495057;
+    color: white;
+    border: 1px solid #007bff;
+  }
+  
+  .btn-primary {
+    width: 100%;
+  }
+  
