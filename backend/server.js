@@ -15,7 +15,7 @@ app.use(express.json());
 
 const cors = require('cors');
 app.use(cors({
-  origin: 'http://localhost:3000',  // Allow your frontend React app to access the API
+  origin: 'https://gallery-fullstack-project.vercel.app',  // Allow your frontend React app to access the API
   credentials: true,               // Allow cookies to be sent with requests if required
 }));
 
