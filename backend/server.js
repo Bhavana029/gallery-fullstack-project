@@ -19,7 +19,9 @@ app.use(cors({
   credentials: true,               // Allow cookies to be sent with requests if required
 }));
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+const uploadRoute = require("./upload");
+app.use("/api", uploadRoute);
 connectDB();
 
 
