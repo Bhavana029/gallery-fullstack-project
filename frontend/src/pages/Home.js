@@ -141,9 +141,9 @@ function Home() {
           filteredPhotos.map((photo) => (
             <div className="photo-card" key={photo._id}>
               <img src={photo.imageUrl} alt={photo.title} />
-              <h3>{photo.title}</h3>
-              <p>{photo.description}</p>
-              <small>{Array.isArray(photo.tags) ? photo.tags.join(", ") : photo.tags || "No Tags"}</small>
+              <h3>Name:-{photo.title}</h3>
+              <p>Description:-{photo.description}</p>
+              <small>Tags:-{Array.isArray(photo.tags) ? photo.tags.join(", ") : photo.tags || "No Tags"}</small>
               <button
                 className="save-button"
                 onClick={() => setSelectedImage(photo.imageUrl)}
