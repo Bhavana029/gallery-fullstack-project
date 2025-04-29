@@ -20,8 +20,9 @@ app.use(cors({
 }));
 
 
-const uploadRoute = require("./upload");
-app.use("/api", uploadRoute);
+// const uploadRoute = require("./middlewares/upload"); // ✅ correct
+
+// app.use("/api", uploadRoute);
 connectDB();
 
 

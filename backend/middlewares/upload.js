@@ -1,12 +1,9 @@
-// upload.js
+// middlewares/upload.js
 
-const express = require("express");
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
-
-const router = express.Router();
 
 // Configure Cloudinary
 cloudinary.config({
@@ -17,23 +14,15 @@ cloudinary.config({
 
 // Configure Cloudinary Storage
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
-    folder: "uploads", // Cloudinary folder name
+    folder: "uploads", // Folder in Cloudinary
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });
 
-// Setup multer with Cloudinary storage
+// Initialize multer with Cloudinary storage
 const upload = multer({ storage });
 
-// Upload route
-router.post("/upload", upload.single("image"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
-  }
-  // Cloudinary returns a secure URL in req.file.path
-  res.status(200).json({ url: req.file.path });
-});
-
-module.exports = router;
+// ✅ Export just the middleware
+module.exports = upload;
