@@ -75,14 +75,20 @@ exports.deleteImage = async (req, res) => {
     const publicId = image.imageUrl.split('/').pop().split('.')[0]; // Extract public ID from URL
 
     // Delete the image from Cloudinary
-    await cloudinary.uploader.destroy(publicId);
+    const cloudinaryResponse = await cloudinary.uploader.destroy(publicId);
+
+    if (cloudinaryResponse.result === "ok") {
+      console.log("Image deleted from Cloudinary successfully.");
+    } else {
+      console.log("Cloudinary error:", cloudinaryResponse);
+    }
 
     // Delete the image record from the database
-    await image.remove();
+    await image.deleteOne(); // Use deleteOne() instead of remove()
 
     res.status(200).json({ message: "Image deleted successfully" });
   } catch (error) {
     console.error("Error deleting image:", error);
-    res.status(500).json({ message: "Failed to delete image", error });
+    res.status(500).json({ message: "Failed to delete image", error: error.message });
   }
 };
