@@ -87,6 +87,17 @@ router.delete("/deleteImage", async (req, res) => {
   }
 });
 
+router.post("/uploadImage", async (req, res) => {
+  try {
+    // Your logic for uploading an image here
+    const imageUrl = await uploadToCloudinary(req.files["image"][0]);
+    res.status(200).json({ message: "Image uploaded successfully", imageUrl });
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    res.status(500).json({ error: "Failed to upload image" });
+  }
+});
+
 // ✅ Save Album
 router.post("/save", albumController.saveAlbum);
 
