@@ -86,17 +86,31 @@ router.delete("/deleteImage", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
-router.post("/uploadImage", async (req, res) => {
+// In your albumController.js or similar
+router.post('/uploadImage', upload.single('image'), async (req, res) => {
   try {
-    // Your logic for uploading an image here
-    const imageUrl = await uploadToCloudinary(req.files["image"][0]);
-    res.status(200).json({ message: "Image uploaded successfully", imageUrl });
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    // Upload to Cloudinary
+    const cloudinaryResult = await cloudinary.uploader.upload(req.file.path);
+    
+    const imageUrl = cloudinaryResult.secure_url;
+    const albumId = req.body.albumId;
+
+    // Add the image URL to the album
+    const album = await Album.findById(albumId);
+    album.images.push(imageUrl);
+    await album.save();
+
+    res.json({ success: true, imagePath: imageUrl });
   } catch (error) {
-    console.error("Error uploading image:", error);
-    res.status(500).json({ error: "Failed to upload image" });
+    console.error('Error uploading image:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
+
 
 // ✅ Save Album
 router.post("/save", albumController.saveAlbum);
