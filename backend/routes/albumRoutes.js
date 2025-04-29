@@ -1,18 +1,32 @@
 const express = require("express");
-const { createAlbum, getAlbums } = require("../controllers/albumController");
+const { getAlbums } = require("../controllers/albumController");
 const Album = require("../models/Album");
 const upload = require("../middlewares/upload");
-
 const path = require("path");
 const fs = require("fs");
 const albumController = require("../controllers/albumController");
 
+const cloudinary = require("cloudinary").v2;
+
+// Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Function to upload images to Cloudinary
+const uploadToCloudinary = async (file) => {
+  const result = await cloudinary.uploader.upload(file.path);
+  return result.secure_url;
+};
+
 const router = express.Router();
 
-// ✅ Album Creation Route (Upload Cover Image + Multiple Images)
+// ✅ Album Creation Route (with file uploads)
 router.post(
   "/create",
-  upload.fields([{ name: "coverImage", maxCount: 1 }, { name: "images", maxCount: 10 }]),
+  upload.fields([{ name: "coverImage", maxCount: 1 }, { name: "images", maxCount: 10 }]), // Handling file uploads
   async (req, res) => {
     try {
       const { albumName, description, tags, userId } = req.body;
@@ -21,10 +35,9 @@ router.post(
         return res.status(400).json({ error: "User ID is required" });
       }
 
-      // Upload Cover Image to Cloudinary
+      // Upload the cover image to Cloudinary
       const coverImageUrl = await uploadToCloudinary(req.files["coverImage"][0]);
 
-      // Upload other images to Cloudinary
       const imagesUrls = [];
       if (req.files["images"]) {
         for (const file of req.files["images"]) {
@@ -41,8 +54,8 @@ router.post(
         coverImage: coverImageUrl,
         images: imagesUrls,
       });
-      await newAlbum.save();
 
+      await newAlbum.save();
       res.status(201).json({ message: "Album created successfully", album: newAlbum });
     } catch (error) {
       console.error("Error creating album:", error);
@@ -51,7 +64,7 @@ router.post(
   }
 );
 
-// ✅ Fetch All Albums Route
+// ✅ Fetch Albums Route
 router.get("/", getAlbums);
 
 // ✅ Delete Image from Cloudinary
@@ -61,13 +74,11 @@ router.delete("/deleteImage", async (req, res) => {
     const album = await Album.findById(albumId);
     if (!album) return res.status(404).json({ success: false, message: "Album not found" });
 
-    // Remove image URL from album
     album.images = album.images.filter((img) => img !== imageUrl);
     await album.save();
 
-    // Extract Cloudinary public ID and delete the image
-    const publicId = imageUrl.split("/").pop().split(".")[0]; // Extract public ID from the URL
-    await cloudinary.uploader.destroy(publicId); // Delete from Cloudinary
+    const publicId = imageUrl.split("/").pop().split(".")[0];
+    await cloudinary.uploader.destroy(publicId);
 
     res.json({ success: true });
   } catch (error) {
@@ -82,7 +93,7 @@ router.post("/save", albumController.saveAlbum);
 // ✅ Favorite Album
 router.post("/favorite", albumController.favoriteAlbum);
 
-// ✅ Delete Album (from Cloudinary and DB)
+// ✅ Delete Album
 router.delete("/delete", albumController.deleteAlbum);
 
 module.exports = router;

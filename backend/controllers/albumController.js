@@ -9,34 +9,31 @@ const FavoriteAlbum = require("../models/favoriteAlbum");
 exports.createAlbum = async (req, res) => {
   try {
     const { albumName, description, tags, userId } = req.body;
-    
-    // Upload cover image to Cloudinary
-    const coverImageFile = req.files["coverImage"][0];
-    const coverImageResult = await cloudinary.uploader.upload(coverImageFile.path);
-    const coverImageUrl = coverImageResult.secure_url; // Cloudinary URL of cover image
 
-    // Upload images to Cloudinary (if present)
-    const images = req.files["images"]
+    if (!req.files?.coverImage || !req.files.coverImage.length) {
+      return res.status(400).json({ error: "Cover image is required" });
+    }
+
+    const coverImageFile = req.files.coverImage[0];
+    const coverImageResult = await cloudinary.uploader.upload(coverImageFile.path);
+    const coverImageUrl = coverImageResult.secure_url;
+
+    const images = req.files.images
       ? await Promise.all(
-          req.files["images"].map(async (file) => {
+          req.files.images.map(async (file) => {
             const result = await cloudinary.uploader.upload(file.path);
-            return result.secure_url; // Cloudinary URL of the uploaded image
+            return result.secure_url;
           })
         )
       : [];
 
-    if (!userId) {
-      return res.status(400).json({ error: "User ID is required" });
-    }
-
-    // Create a new album
     const newAlbum = new Album({
       userId,
       albumName,
       description,
       tags,
-      coverImage: coverImageUrl, // Store Cloudinary URL
-      images, // Store array of Cloudinary URLs
+      coverImage: coverImageUrl,
+      images,
     });
 
     await newAlbum.save();
@@ -47,7 +44,6 @@ exports.createAlbum = async (req, res) => {
     res.status(500).json({ error: "Failed to create album" });
   }
 };
-
 // Get Albums
 exports.getAlbums = async (req, res) => {
   try {
