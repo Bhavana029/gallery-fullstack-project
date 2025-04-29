@@ -91,30 +91,43 @@ try {
 
   const handleDeleteImage = async () => {
     if (!selectedAlbum) return;
+  
     const imageName = selectedAlbum.images[currentImageIndex];
-
+  
     try {
-      const response = await axios.delete(`${API_BASE_URL}/api/albums/deleteImage`, {
-        data: { albumId: selectedAlbum._id, imageName },
-      });
-
+      const response = await axios.delete(
+        `${API_BASE_URL}/api/albums/deleteImage`, 
+        { 
+          data: { 
+            albumId: selectedAlbum._id, 
+            imageUrl: imageName // Correct naming from 'imageName' to 'imageUrl'
+          }
+        }
+      );
+  
       if (response.data.success) {
+        // Update the images array after deleting the image
         const updatedImages = selectedAlbum.images.filter((img) => img !== imageName);
+        
         setSelectedAlbum((prev) => ({ ...prev, images: updatedImages }));
         setAlbums((prevAlbums) =>
           prevAlbums.map((album) =>
             album._id === selectedAlbum._id ? { ...album, images: updatedImages } : album
           )
         );
+  
+        // If no images are left, close the modal, otherwise reset the image index
         if (updatedImages.length === 0) closeModal();
         else setCurrentImageIndex(0);
       } else {
         alert("Delete failed: " + response.data.message);
       }
     } catch (error) {
+      console.error("Error deleting image:", error);
       alert("Error deleting image: " + error.message);
     }
   };
+  
 
   const handleSaveAlbum = async (albumId) => {
     try {
