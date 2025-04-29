@@ -1,46 +1,73 @@
 const express = require("express");
-const { createAlbum, getAlbums} = require("../controllers/albumController");
-const Album=require("../models/Album")
-const upload = require("../middlewares/upload"); // ✅ Import file upload middleware
-const path = require('path');
-const fs = require('fs');
-const albumController=require("../controllers/albumController")
+const { createAlbum, getAlbums } = require("../controllers/albumController");
+const Album = require("../models/Album");
+const upload = require("../middlewares/upload");
+
+const path = require("path");
+const fs = require("fs");
+const albumController = require("../controllers/albumController");
 
 const router = express.Router();
 
 // ✅ Album Creation Route (Upload Cover Image + Multiple Images)
-router.post("/create", upload.fields([{ name: "coverImage", maxCount: 1 }, { name: "images", maxCount: 10 }]), createAlbum);
+router.post(
+  "/create",
+  upload.fields([{ name: "coverImage", maxCount: 1 }, { name: "images", maxCount: 10 }]),
+  async (req, res) => {
+    try {
+      const { albumName, description, tags, userId } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+
+      // Upload Cover Image to Cloudinary
+      const coverImageUrl = await uploadToCloudinary(req.files["coverImage"][0]);
+
+      // Upload other images to Cloudinary
+      const imagesUrls = [];
+      if (req.files["images"]) {
+        for (const file of req.files["images"]) {
+          const imageUrl = await uploadToCloudinary(file);
+          imagesUrls.push(imageUrl);
+        }
+      }
+
+      const newAlbum = new Album({
+        userId,
+        albumName,
+        description,
+        tags,
+        coverImage: coverImageUrl,
+        images: imagesUrls,
+      });
+      await newAlbum.save();
+
+      res.status(201).json({ message: "Album created successfully", album: newAlbum });
+    } catch (error) {
+      console.error("Error creating album:", error);
+      res.status(500).json({ error: "Failed to create album" });
+    }
+  }
+);
 
 // ✅ Fetch All Albums Route
 router.get("/", getAlbums);
 
-// ✅ Delete Album Route
-// router.delete("/:albumId", deleteImage);
-// router.post("/uploadImage", upload.single("image"), async (req, res) => {
-//   try {
-//     const { albumId } = req.body;
-//     const album = await Album.findById(albumId);
-//     if (!album) return res.status(404).json({ error: "Album not found" });
-
-//     album.images.push(req.file.filename);
-//     await album.save();
-
-//     res.json({ message: "Image uploaded successfully", imagePath: req.file.filename });
-//   } catch (error) {
-//     res.status(500).json({ error: "Error uploading image" });
-//   }
-// });
+// ✅ Delete Image from Cloudinary
 router.delete("/deleteImage", async (req, res) => {
   try {
-    const { albumId, imageName } = req.body;
+    const { albumId, imageUrl } = req.body;
     const album = await Album.findById(albumId);
     if (!album) return res.status(404).json({ success: false, message: "Album not found" });
 
-    album.images = album.images.filter((img) => img !== imageName);
+    // Remove image URL from album
+    album.images = album.images.filter((img) => img !== imageUrl);
     await album.save();
 
-    const imagePath = path.join(__dirname, "../uploads", imageName);
-    if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+    // Extract Cloudinary public ID and delete the image
+    const publicId = imageUrl.split("/").pop().split(".")[0]; // Extract public ID from the URL
+    await cloudinary.uploader.destroy(publicId); // Delete from Cloudinary
 
     res.json({ success: true });
   } catch (error) {
@@ -49,27 +76,13 @@ router.delete("/deleteImage", async (req, res) => {
   }
 });
 
+// ✅ Save Album
+router.post("/save", albumController.saveAlbum);
 
+// ✅ Favorite Album
+router.post("/favorite", albumController.favoriteAlbum);
 
-router.post("/uploadImage", upload.single("image"), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
-
-    const album = await Album.findById(req.body.albumId);
-    if (!album) return res.status(404).json({ success: false, message: "Album not found" });
-
-    album.images.push(req.file.filename);
-    await album.save();
-
-    res.json({ success: true, imagePath: req.file.filename });
-  } catch (error) {
-    console.error("Error uploading image:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-router.post("/save", albumController.saveAlbum);  // Save album
-router.post("/favorite", albumController.favoriteAlbum);  // Favorite album
-router.delete("/delete", albumController.deleteAlbum);  // Delete album
-
+// ✅ Delete Album (from Cloudinary and DB)
+router.delete("/delete", albumController.deleteAlbum);
 
 module.exports = router;

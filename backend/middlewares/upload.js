@@ -15,12 +15,12 @@ cloudinary.config({
 // Configure Cloudinary Storage
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: "uploads", // Folder in Cloudinary
+  params: async (req, file) => ({
+    folder: "uploads",
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
-  },
+    public_id: `${Date.now()}-${file.originalname}`,
+  }),
 });
-
 // Initialize multer with Cloudinary storage
 const upload = multer({ storage });
 

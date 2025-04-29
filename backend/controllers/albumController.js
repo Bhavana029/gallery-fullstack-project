@@ -1,25 +1,49 @@
+const cloudinary = require("cloudinary").v2;// Import Cloudinary
 const Album = require("../models/Album");
 const mongoose = require("mongoose");
 const SavedAlbum = require("../models/savedAlbum");
 const FavoriteAlbum = require("../models/favoriteAlbum");
 
 
-// Create Album
+// Create Album with Cloudinary Upload
 exports.createAlbum = async (req, res) => {
   try {
     const { albumName, description, tags, userId } = req.body;
-    const coverImage = req.files["coverImage"][0].filename;
-    const images = req.files["images"] ? req.files["images"].map((file) => file.filename) : [];
+    
+    // Upload cover image to Cloudinary
+    const coverImageFile = req.files["coverImage"][0];
+    const coverImageResult = await cloudinary.uploader.upload(coverImageFile.path);
+    const coverImageUrl = coverImageResult.secure_url; // Cloudinary URL of cover image
+
+    // Upload images to Cloudinary (if present)
+    const images = req.files["images"]
+      ? await Promise.all(
+          req.files["images"].map(async (file) => {
+            const result = await cloudinary.uploader.upload(file.path);
+            return result.secure_url; // Cloudinary URL of the uploaded image
+          })
+        )
+      : [];
 
     if (!userId) {
       return res.status(400).json({ error: "User ID is required" });
     }
 
-    const newAlbum = new Album({ userId, albumName, description, tags, coverImage, images });
+    // Create a new album
+    const newAlbum = new Album({
+      userId,
+      albumName,
+      description,
+      tags,
+      coverImage: coverImageUrl, // Store Cloudinary URL
+      images, // Store array of Cloudinary URLs
+    });
+
     await newAlbum.save();
 
     res.status(201).json({ message: "Album created successfully", album: newAlbum });
   } catch (error) {
+    console.error("Error creating album:", error.message);
     res.status(500).json({ error: "Failed to create album" });
   }
 };
@@ -29,12 +53,7 @@ exports.getAlbums = async (req, res) => {
   try {
     let { userId, search } = req.query;
 
-    console.log("Received userId:", userId);
-    console.log("Received search:", search);
-
-    // Validate userId before querying
     if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
-      console.log("Invalid userId format:", userId);
       return res.status(400).json({ error: "Invalid userId format" });
     }
 
@@ -42,41 +61,14 @@ exports.getAlbums = async (req, res) => {
     if (userId) query.userId = new mongoose.Types.ObjectId(userId);
     if (search) query.albumName = { $regex: search, $options: "i" };
 
-    console.log("Final query:", query);
-
     const albums = await Album.find(query).sort({ createdAt: -1 });
-
-    console.log("Fetched albums:", albums);
     res.status(200).json({ albums });
-
   } catch (error) {
-    console.error("❌ Error fetching albums:", error.message);  // Prints exact error
-    res.status(500).json({ error: error.message });  // Returns actual error message
+    res.status(500).json({ error: "Failed to fetch albums" });
   }
 };
 
-// Delete Album
-// exports.deleteImage = async (req, res) => {
-//   try {
-//     const { albumId, imageName } = req.body;
-//     if (!albumId || !imageName) {
-//       return res.status(400).json({ error: "Album ID and Image Name are required" });
-//     }
-
-//     const album = await Album.findById(albumId);
-//     if (!album) {
-//       return res.status(404).json({ error: "Album not found" });
-//     }
-
-//     album.images = album.images.filter((img) => img !== imageName);
-//     await album.save();
-
-//     res.status(200).json({ message: "Image deleted successfully", album });
-//   } catch (error) {
-//     console.error("Error deleting image:", error);
-//     res.status(500).json({ error: "Failed to delete image" });
-//   }
-// };
+// Save album to favorites
 exports.saveAlbum = async (req, res) => {
   const { userId, albumId } = req.body;
 
@@ -102,18 +94,28 @@ exports.favoriteAlbum = async (req, res) => {
   }
 };
 
-// Delete album (from both frontend and backend)
+// Delete album
 exports.deleteAlbum = async (req, res) => {
   const { albumId } = req.body;
 
   try {
     // Delete album from the Albums collection
-    await Album.findByIdAndDelete(albumId);
-    // Delete associated saved and favorite entries
-    await SavedAlbum.deleteMany({ albumId });
-    await FavoriteAlbum.deleteMany({ albumId });
+    const album = await Album.findByIdAndDelete(albumId);
+    if (album) {
+      // Delete associated saved and favorite entries
+      await SavedAlbum.deleteMany({ albumId });
+      await FavoriteAlbum.deleteMany({ albumId });
 
-    res.status(200).json({ message: "Album deleted successfully" });
+      // Optionally, delete the images from Cloudinary (if required)
+      await cloudinary.uploader.destroy(album.coverImage.split("/").pop().split(".")[0]);
+      album.images.forEach(async (imgUrl) => {
+        await cloudinary.uploader.destroy(imgUrl.split("/").pop().split(".")[0]);
+      });
+
+      res.status(200).json({ message: "Album deleted successfully" });
+    } else {
+      res.status(404).json({ error: "Album not found" });
+    }
   } catch (error) {
     res.status(500).json({ error: "Error deleting album" });
   }
