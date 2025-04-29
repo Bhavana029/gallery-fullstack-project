@@ -64,28 +64,29 @@ function AlbumGallery({ userId, searchQuery }) {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append("image", file);
-    formData.append("albumId", selectedAlbum._id);
+formData.append("image", file);  // Make sure this field name matches the backend
+formData.append("albumId", selectedAlbum._id);
 
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/albums/uploadImage`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+try {
+  const response = await axios.post(`${API_BASE_URL}/api/albums/uploadImage`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 
-      if (response.data.success) {
-        const newImagePath = response.data.imagePath; // Must be Cloudinary URL
-        setSelectedAlbum((prev) => ({ ...prev, images: [...prev.images, newImagePath] }));
-        setAlbums((prevAlbums) =>
-          prevAlbums.map((album) =>
-            album._id === selectedAlbum._id ? { ...album, images: [...album.images, newImagePath] } : album
-          )
-        );
-      } else {
-        alert("Upload failed: " + response.data.message);
-      }
-    } catch (error) {
-      alert("Error uploading image: " + error.message);
-    }
+  if (response.data.success) {
+    const newImagePath = response.data.imagePath;
+    setSelectedAlbum((prev) => ({ ...prev, images: [...prev.images, newImagePath] }));
+    setAlbums((prevAlbums) =>
+      prevAlbums.map((album) =>
+        album._id === selectedAlbum._id ? { ...album, images: [...album.images, newImagePath] } : album
+      )
+    );
+  } else {
+    alert("Upload failed: " + response.data.message);
+  }
+} catch (error) {
+  alert("Error uploading image: " + error.message);
+}
+
   };
 
   const handleDeleteImage = async () => {
@@ -154,7 +155,9 @@ function AlbumGallery({ userId, searchQuery }) {
             <h4>Name:-{album.albumName}</h4>
             <p>Description:-{album.description}</p>
             <p>Tags:-{album.tags ? album.tags.join(", ") : "No tags"}</p>
-            <Button className="button1" onClick={() => openModal(album)}>View</Button>
+            <Button className="button1" onClick={() => openModal(album)}>
+              View
+            </Button>
             <div className="album-icons">
               <FaBookmark onClick={() => handleSaveAlbum(album._id)} />
               <FaHeart onClick={() => handleFavoriteAlbum(album._id)} />
@@ -203,7 +206,12 @@ function AlbumGallery({ userId, searchQuery }) {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <input id="fileInput" type="file" onChange={handleImageUpload} style={{ display: "none" }} />
+          <input
+            id="fileInput"
+            type="file"
+            onChange={handleImageUpload}
+            style={{ display: "none" }}
+          />
           <Button className="button1" onClick={() => document.getElementById("fileInput").click()}>
             Add Image
           </Button>
